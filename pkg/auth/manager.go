@@ -16,14 +16,15 @@ package auth
 
 import (
 	"fmt"
+	"os"
+	"strings"
+	"sync"
+
 	jwtacl "github.com/greenpau/caddy-auth-jwt/pkg/acl"
 	jwtconfig "github.com/greenpau/caddy-auth-jwt/pkg/config"
 	jwterrors "github.com/greenpau/caddy-auth-jwt/pkg/errors"
 	jwtvalidator "github.com/greenpau/caddy-auth-jwt/pkg/validator"
 	"go.uber.org/zap"
-	"os"
-	"strings"
-	"sync"
 )
 
 // AuthManager is the global authorization provider pool.
@@ -182,7 +183,7 @@ func (p *InstanceManager) Register(m *Authorizer) error {
 		}
 
 		if m.ValidateAllowMatchAll {
-			m.TokenValidatorOptions.ValidateAllowMatchAll = true;
+			m.TokenValidatorOptions.ValidateAllowMatchAll = true
 		}
 
 		for tokenName := range allowedTokenNames {
@@ -191,6 +192,7 @@ func (p *InstanceManager) Register(m *Authorizer) error {
 		m.TokenValidator.AccessList = m.AccessList
 		m.TokenValidator.TokenSources = m.AllowedTokenSources
 		m.TokenValidator.TokenConfigs = m.TrustedTokens
+		m.TokenValidator.JwksUri = m.JwksURI
 
 		if err := m.TokenValidator.ConfigureTokenBackends(); err != nil {
 			return jwterrors.ErrInvalidBackendConfiguration.WithArgs(m.Name, err)
@@ -201,6 +203,7 @@ func (p *InstanceManager) Register(m *Authorizer) error {
 			zap.String("instance_name", m.Name),
 			zap.Any("trusted_tokens", m.TrustedTokens),
 			zap.String("auth_url_path", m.AuthURLPath),
+			zap.String("jwks_uri", m.JwksURI),
 			zap.String("token_sources", strings.Join(m.AllowedTokenSources, " ")),
 			zap.String("token_types", strings.Join(m.AllowedTokenTypes, " ")),
 			zap.Any("token_validator", m.TokenValidator),

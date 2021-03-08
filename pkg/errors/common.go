@@ -89,4 +89,11 @@ const (
 	ErrInvalidParsedClaims         StandardError = "failed to extract claims: %s"
 	ErrInvalidSecret               StandardError = "secret key backend error: %s"
 	ErrInvalid                     StandardError = "%v"
+
+	ErrJwksUriInvalid                       StandardError = "Jwks uri invalid"
+	ErrBackendOauthJwksResponseKeysNotFound StandardError = "jwks response has no keys field"
+	ErrBackendOauthJwksKeysParseFailed      StandardError = "failed to compile jwks keys into JSON: %s"
+	ErrBackendOauthJwksKeysNotFound         StandardError = "no jwks keys found"
+	ErrBackendOauthJwksInvalidKey           StandardError = "invalid jwks key: %s"
+	ErrBackendOauthKeyFetchFailed           StandardError = "failed to fetch jwt keys for OAuth 2.0 authorization server: %s"
 )

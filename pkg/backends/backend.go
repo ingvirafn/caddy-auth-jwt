@@ -16,9 +16,14 @@ package backends
 
 import (
 	"crypto/rsa"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 
 	jwtlib "github.com/dgrijalva/jwt-go"
 	"github.com/greenpau/caddy-auth-jwt/pkg/errors"
+	oauth2 "github.com/greenpau/caddy-auth-portal/pkg/backends/oauth2"
+	"go.uber.org/zap"
 )
 
 var defaultKeyID = "0"
@@ -98,4 +103,57 @@ func (b *RSAKeyTokenBackend) ProvideKey(token *jwtlib.Token) (interface{}, error
 	}
 
 	return nil, errors.ErrNoRSAKeyFound
+}
+
+func FetchKeysURL(jwks_uri string) (map[string]interface{}, error) {
+
+	secrets := make(map[string]interface{})
+
+	resp, err := http.Get(jwks_uri)
+	if err != nil {
+		return nil, err
+	}
+	respBody, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	data := make(map[string]interface{})
+
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, err
+	}
+
+	if _, exists := data["keys"]; !exists {
+		return nil, errors.ErrBackendOauthJwksResponseKeysNotFound
+	}
+
+	jwksJSON, err := json.Marshal(data["keys"])
+	if err != nil {
+		return nil, errors.ErrBackendOauthJwksKeysParseFailed.WithArgs(err)
+	}
+
+	keys := []*oauth2.JwksKey{}
+	if err := json.Unmarshal(jwksJSON, &keys); err != nil {
+		return nil, err
+	}
+
+	if len(keys) < 1 {
+		return nil, errors.ErrBackendOauthJwksKeysNotFound
+	}
+
+	for _, k := range keys {
+		if err := k.Validate(); err != nil {
+			return nil, errors.ErrBackendOauthJwksInvalidKey.WithArgs(err)
+		}
+		secrets[k.KeyID] = k.GetPublicKey()
+	}
+
+	return secrets, nil
+}
+
+type JwksUriBackend struct {
+	jwks_uri   string
+	publicKeys map[string]*rsa.PublicKey
+	logger     *zap.Logger
 }

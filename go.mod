@@ -3,6 +3,7 @@ module github.com/greenpau/caddy-auth-jwt
 go 1.14
 
 require (
+  github.com/greenpau/caddy-auth-portal v1.4.3
 	github.com/caddyserver/caddy/v2 v2.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/go-cmp v0.4.0

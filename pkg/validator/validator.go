@@ -64,6 +64,7 @@ type TokenValidator struct {
 	Cache                *jwtcache.TokenCache
 	AccessList           []*jwtacl.AccessListEntry
 	TokenBackends        []jwtbackends.TokenBackend
+	JwksUri              string
 	TokenSources         []string
 }
 
@@ -105,6 +106,17 @@ func (v *TokenValidator) SetTokenName(name string) {
 // ConfigureTokenBackends configures available TokenBackend.
 func (v *TokenValidator) ConfigureTokenBackends() error {
 	v.TokenBackends = []jwtbackends.TokenBackend{}
+
+	if v.JwksUri != "" {
+		keys, err := jwtbackends.FetchKeysURL(v.JwksUri)
+		if err != nil {
+			return jwterrors.ErrJwksUriInvalid.WithArgs(err)
+		}
+
+		backend := jwtbackends.NewRSAKeyTokenBackend(keys)
+
+		v.TokenBackends = append(v.TokenBackends, backend)
+	}
 
 	for _, c := range v.TokenConfigs {
 		if c.TokenSecret != "" {

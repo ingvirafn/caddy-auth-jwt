@@ -350,6 +350,17 @@ PQIDAQAB
 
 [:arrow_up: Back to Top](#table-of-contents)
 
+## Verification with RSA public keys from OpenId JWKS document
+
+
+```
+  route /prometheus* {
+    jwt {
+      primary yes
+      jwks_uri https://mydomain.com/auth/.well-known/jwks.json
+    }
+  }
+```
 ## Auto-Redirect URL
 
 Consider the following configuration snippet. When the JWT plugin detects
