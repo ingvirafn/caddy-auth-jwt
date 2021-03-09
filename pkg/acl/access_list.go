@@ -15,11 +15,12 @@
 package acl
 
 import (
+	"regexp"
+	"strings"
+
 	jwtclaims "github.com/greenpau/caddy-auth-jwt/pkg/claims"
 	jwtconfig "github.com/greenpau/caddy-auth-jwt/pkg/config"
 	"github.com/greenpau/caddy-auth-jwt/pkg/errors"
-	"regexp"
-	"strings"
 )
 
 var pathACLPatterns map[string]*regexp.Regexp
@@ -86,14 +87,14 @@ func (acl *AccessListEntry) SetAction(s string) error {
 // SetClaim sets claim value of an access list entry.
 func (acl *AccessListEntry) SetClaim(s string) error {
 	supportedClaims := map[string]string{
-		"roles":  "roles",
-		"role":   "roles",
-		"groups": "roles",
-		"group":  "roles",
-		"audience": "audience",
+		"roles":     "roles",
+		"role":      "roles",
+		"groups":    "roles",
+		"group":     "roles",
+		"audience":  "audience",
 		"audiences": "audience",
-		"scopes": "scopes",
-		"scope": "scopes",
+		"scopes":    "scopes",
+		"scope":     "scopes",
 	}
 	if s == "" {
 		return errors.ErrEmptyClaim
@@ -177,7 +178,9 @@ func (acl *AccessListEntry) IsClaimAllowed(userClaims *jwtclaims.UserClaims, opt
 				break
 			}
 			for _, value := range acl.Values {
-				if value == role || value == "*" || value == "any" {
+				repl := opts.Replacer
+				valueReplaced := repl.ReplaceAll(value, "")
+				if valueReplaced == role || value == "*" || value == "any" {
 					claimMatches = true
 					break
 				}
@@ -192,7 +195,9 @@ func (acl *AccessListEntry) IsClaimAllowed(userClaims *jwtclaims.UserClaims, opt
 				break
 			}
 			for _, value := range acl.Values {
-				if value == scope || value == "*" || value == "any" {
+				repl := opts.Replacer
+				valueReplaced := repl.ReplaceAll(value, "")
+				if valueReplaced == scope || value == "*" || value == "any" {
 					claimMatches = true
 					break
 				}
@@ -207,7 +212,9 @@ func (acl *AccessListEntry) IsClaimAllowed(userClaims *jwtclaims.UserClaims, opt
 				break
 			}
 			for _, value := range acl.Values {
-				if value == audience || value == "*" || value == "any" {
+				repl := opts.Replacer
+				valueReplaced := repl.ReplaceAll(value, "")
+				if valueReplaced == audience || value == "*" || value == "any" {
 					claimMatches = true
 					break
 				}

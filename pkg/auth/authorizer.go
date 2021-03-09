@@ -16,15 +16,17 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/caddyserver/caddy/v2"
 	jwtacl "github.com/greenpau/caddy-auth-jwt/pkg/acl"
 	jwtconfig "github.com/greenpau/caddy-auth-jwt/pkg/config"
 	jwterrors "github.com/greenpau/caddy-auth-jwt/pkg/errors"
 	jwthandlers "github.com/greenpau/caddy-auth-jwt/pkg/handlers"
 	jwtvalidator "github.com/greenpau/caddy-auth-jwt/pkg/validator"
 	"go.uber.org/zap"
-	"net/http"
-	"strings"
-	"time"
 )
 
 // Authorizer authorizes access to endpoints based on
@@ -133,7 +135,9 @@ func (m Authorizer) Authenticate(w http.ResponseWriter, r *http.Request, upstrea
 	} else {
 		opts = m.TokenValidatorOptions
 	}
-	opts.Logger = m.logger;
+	opts.Logger = m.logger
+	repl := r.Context().Value(caddy.ReplacerCtxKey).(*caddy.Replacer)
+	opts.Replacer = repl
 
 	userClaims, validUser, err := m.TokenValidator.Authorize(r, opts)
 	if err != nil {
@@ -156,7 +160,7 @@ func (m Authorizer) Authenticate(w http.ResponseWriter, r *http.Request, upstrea
 				w.Header().Add("Set-Cookie", cookie.Name+"=delete; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT")
 			}
 		}
-		if (!m.AuthRedirectDisabled)  {
+		if !m.AuthRedirectDisabled {
 			redirOpts := make(map[string]interface{})
 			redirOpts["auth_url_path"] = m.AuthURLPath
 			redirOpts["auth_redirect_query_disabled"] = m.AuthRedirectQueryDisabled
@@ -178,7 +182,7 @@ func (m Authorizer) Authenticate(w http.ResponseWriter, r *http.Request, upstrea
 				w.Header().Add("Set-Cookie", cookie.Name+"=delete; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT")
 			}
 		}
-		if (!m.AuthRedirectDisabled)  {
+		if !m.AuthRedirectDisabled {
 			redirOpts := make(map[string]interface{})
 			redirOpts["auth_url_path"] = m.AuthURLPath
 			redirOpts["auth_redirect_query_disabled"] = m.AuthRedirectQueryDisabled
@@ -201,7 +205,7 @@ func (m Authorizer) Authenticate(w http.ResponseWriter, r *http.Request, upstrea
 				w.Header().Add("Set-Cookie", cookie.Name+"=delete; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT")
 			}
 		}
-		if (!m.AuthRedirectDisabled)  {
+		if !m.AuthRedirectDisabled {
 			redirOpts := make(map[string]interface{})
 			redirOpts["auth_url_path"] = m.AuthURLPath
 			redirOpts["auth_redirect_query_disabled"] = m.AuthRedirectQueryDisabled
