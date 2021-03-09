@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caddyserver/caddy/v2"
 	jwtacl "github.com/greenpau/caddy-auth-jwt/pkg/acl"
 	jwtconfig "github.com/greenpau/caddy-auth-jwt/pkg/config"
 	jwterrors "github.com/greenpau/caddy-auth-jwt/pkg/errors"
@@ -136,6 +137,8 @@ func (m Authorizer) Authenticate(w http.ResponseWriter, r *http.Request, upstrea
 		opts = m.TokenValidatorOptions
 	}
 	opts.Logger = m.logger
+	repl := r.Context().Value(caddy.ReplacerCtxKey).(*caddy.Replacer)
+	opts.Replacer = repl
 
 	userClaims, validUser, err := m.TokenValidator.Authorize(r, opts)
 	if err != nil {
